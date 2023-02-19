@@ -126,5 +126,23 @@ Furniture %>% welch_anova_test(log_Sales~`Sub-Category`)
 ```
 One-way ANOVA with Welch test suggests that at least one of the subcategories has a significantly different sales compared to others. We will proceed with a post-hoc test to determine the significant sub-category. There are multiple post-hoc test available depending on the assumptions about the data. We know from the Levene's test that our furniture sales data have unequal variances. Next, we need to find out if the sample sizes among the sub-categories are equal.
 ```{r}
+#Another summary statistics of furniture sub-category
+Furniture %>%
+  group_by(`Sub-Category`) %>%
+  summarise(
+          count = n(),
+          mean_sales = mean(Sales),
+          SD_sales = sd(Sales))
+```
+Since the sample size is also unequal, the following post-hoc tests are appropriate: Dunette's test, Games-Howell test and Tamhane test. 
+Let's use Games-Howell test.
+```{r}
+
+Furniture %>% rename("SubCategory" = "Sub-Category") %>% games_howell_test(log_Sales~SubCategory)
+
+```
+Games-Howell test shows that all pairwaise comparisons, except for Bookcases Vs Chairs, yield significant results.
+
+```{r}
 devtools::session_info()
 ```
