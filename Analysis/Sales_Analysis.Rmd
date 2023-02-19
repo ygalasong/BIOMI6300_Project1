@@ -7,24 +7,56 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(tidyverse)
 ```
 
-## R Markdown
+# Importing the Dataset
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+The 'Superstore' dataset contains \~ 10,000 entries of sales data. The following information is recorded: order ID, order date, ship date, ship mode, customer information (name, address, segment), product information, sales, discount and profit. To begin the analysis, we import the dataset and reformat certain columns as needed.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r import}
+Superstore <- read_csv("../Data/Superstore.csv", 
+    col_types = cols(`Order Date` = col_date(format = "%m/%d/%Y"), 
+        `Ship Date` = col_date(format = "%m/%d/%Y")))
+head(Superstore)
 ```
 
-## Including Plots
+# Calculating summary statistics
 
-You can also embed plots, for example:
+We might want to know the average sales and profits the store gained from different consumer segment.
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r summary stats1}
+#Average sales and profit grouped by customer segment and region
+Superstore %>%
+  group_by(Segment) %>%
+  summarise(
+          count = n(),
+          avg_sales = mean(Sales),
+          avg_profit = mean(Profit)
+            )
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r summary stats2}
+#Maximum sales and profits grouped by region
+Superstore %>%
+  group_by(Region) %>%
+  summarise(
+          count = n(),
+          max_sales = max(Sales),
+          min_sales = min(Sales),
+          max_profit = max(Profit),
+          min_profit = min(Profit)
+            )
+```
+
+```{r summary stats3}
+#Median sales grouped by product sub-category
+Superstore %>%
+  group_by(`Sub-Category`) %>%
+  summarise(
+          count = n(),
+          median_sales = median(Sales),
+          median_profit = median(Profit)
+            )
+```
