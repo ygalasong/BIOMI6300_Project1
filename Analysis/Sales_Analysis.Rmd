@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(devtools)
+library(ggpubr)
 ```
 
 # Importing the Dataset
@@ -94,7 +95,16 @@ We want to know if which product subcategory within the furniture category gener
 ```{r boxplot}
 ggplot(data = Furniture, aes(x = `Sub-Category`, y = log(Sales),fill = `Sub-Category`))+ geom_boxplot()+labs(title = "Furniture Sales by Subcategories ")+scale_fill_brewer(palette = "Pastel2")
 ```
+## Checking normality assumption
+Before performing Analysis of Variance (ANOVA), we should make sure that the data meets certain assumptions, one of which is the normality assumption. Normality is generally visualized using QQplot. 
+```{r}
+#Add a new column of log-transformed sales to the Furniture dataframe
+Furniture$log_Sales = log(Furniture$Sales)
 
+#QQ plot
+ggqqplot(Furniture, "log_Sales", facet.by = "Sub-Category")
+```
+All the points fall approximately along the reference line, for each cell. So we can assume normality of the log-transformed sales data.
 ```{r}
 devtools::session_info()
 ```
