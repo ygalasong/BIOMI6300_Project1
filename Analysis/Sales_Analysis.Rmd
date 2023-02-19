@@ -3,10 +3,14 @@ title: "Analysis of Superstore Furniture Sales Data"
 author: "Yupawadee Galasong"
 date: "2023-02-19"
 output: html_document
+bibliography: packages.bib
+link-citations: true
+nocite: '@*'
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::write_bib(c("base", "tidyverse", "ggpubr","rstatix"), "packages.bib")
 library(tidyverse)
 library(devtools)
 library(ggpubr)
@@ -15,10 +19,10 @@ library(rstatix)
 
 # Analyses to be performed
 
-1. Summary statistics such as mean, median and standard deviation
-2. Normality and Homogeneity of Variance check
-3. One-Way ANOVA
-4. Post-hoc test
+1.  Summary statistics such as mean, median and standard deviation
+2.  Normality and Homogeneity of Variance check
+3.  One-Way ANOVA
+4.  Post-hoc test
 
 # Introduction
 
@@ -33,7 +37,7 @@ head(Superstore)
 
 # Calculating summary statistics
 
-We might want to know the average sales and profits the store gained from different consumer segment.
+We might want to know the average sales and profits the store gained from different consumer segment. Using tidyverse [@R-tidyverse] meta-package allows us to perform routine data science tasks such as computing summary statistics and grouping data frame.
 
 ```{r summary stats1}
 #Average sales and profit grouped by customer segment and region
@@ -118,7 +122,11 @@ Furniture$log_Sales = log(Furniture$Sales)
 ggqqplot(Furniture, "log_Sales", facet.by = "Sub-Category")
 ```
 
-All the points fall approximately along the reference line, for each cell. So we can assume normality of the log-transformed sales data. \## Checking the assumption of homogeneity of variances Levene's test can be used to check the homogeneity of variances; i.e. if variances are equal.
+All the points fall approximately along the reference line, for each cell. So we can assume normality of the log-transformed sales data.
+
+## Checking the assumption of homogeneity of variances
+
+Levene's test can be used to check the homogeneity of variances; i.e. if variances are equal.
 
 ```{r Homogeneity of Variances, warning=FALSE}
 #Displaying results in a tibble
@@ -126,7 +134,7 @@ Furniture %>% levene_test(log_Sales ~ `Sub-Category`)
 
 ```
 
-The p-value of the Levene's test is way below 0.05, which tells us that the variances are significantly different among product subcategories! We should not be performing a typical ANOVA because the homogeneity of variance assumption is not met. However, we can st will compute run a specific kind of ANOVA that has Welch statistic. This test does not require the assumption of equal variances.
+The p-value of the Levene's test is way below 0.05, which tells us that the variances are significantly different among product subcategories! We should not be performing a typical ANOVA because the homogeneity of variance assumption is not met. However, we can st will compute run a specific kind of ANOVA that has Welch statistic. This test does not require the assumption of equal variances [@R-rstatix].
 
 ## Welch One-Way ANOVA Test
 
@@ -183,3 +191,4 @@ ggboxplot(Furniture %>% rename("SubCategory" = "Sub-Category") ,
 ```{r}
 devtools::session_info()
 ```
+# Bibliography
