@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(devtools)
 library(ggpubr)
+library(rstatix)
 ```
 
 # Importing the Dataset
@@ -98,13 +99,27 @@ ggplot(data = Furniture, aes(x = `Sub-Category`, y = log(Sales),fill = `Sub-Cate
 ## Checking normality assumption
 Before performing Analysis of Variance (ANOVA), we should make sure that the data meets certain assumptions, one of which is the normality assumption. Normality is generally visualized using QQplot. 
 ```{r}
-#Add a new column of log-transformed sales to the Furniture dataframe
+#Add a new column of log-transformed sales to the Furniture dataframe because ggqqplot cannot accept log(Sales) as input.
 Furniture$log_Sales = log(Furniture$Sales)
 
 #QQ plot
 ggqqplot(Furniture, "log_Sales", facet.by = "Sub-Category")
 ```
 All the points fall approximately along the reference line, for each cell. So we can assume normality of the log-transformed sales data.
+##  Checking the assumption of homogeneity of variances 
+Levene's test can be used to check the homogeneity of variances; i.e. if variances are equal.
+```{r Homogeneity of Variances, warning=FALSE}
+#Displaying results in a tibble
+Furniture %>% levene_test(log_Sales ~ `Sub-Category`)
+
+```
+The p-value of the Levene's test is way below 0.05, which tells us that the variances are significantly different amoung product subcategories! 
+We should not be performing a typical ANOVA because the homogeneity of variance assumption is not met. However, we can st will compute run a specific kind of ANOVA that has Welch statistic. This test does not require the assumption of equal variances.
+
+```{r}
+
+```
+
 ```{r}
 devtools::session_info()
 ```
