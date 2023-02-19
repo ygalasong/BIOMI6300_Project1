@@ -94,7 +94,7 @@ Furniture = subset(Superstore, Category == "Furniture")
 ```
 We want to know if which product subcategory within the furniture category generated significant sales. To get a glimpse of how the subcategories stacks up against one another, we can visualize it with side-by-side boxplots. 
 ```{r boxplot}
-ggplot(data = Furniture, aes(x = `Sub-Category`, y = log(Sales),fill = `Sub-Category`))+ geom_boxplot()+labs(title = "Furniture Sales by Subcategories ")+scale_fill_brewer(palette = "Pastel2")
+ggplot(data = Furniture, aes(x = `Sub-Category`, y = log(Sales),fill = `Sub-Category`))+ geom_violin()+labs(title = "Furniture Sales by Subcategories ")+scale_fill_brewer(palette = "Pastel2")
 ```
 ## Checking normality assumption
 Before performing Analysis of Variance (ANOVA), we should make sure that the data meets certain assumptions, one of which is the normality assumption. Normality is generally visualized using QQplot. 
@@ -125,7 +125,7 @@ Furniture$`Sub-Category` <- as.factor(Furniture$`Sub-Category`)
 Furniture %>% welch_anova_test(log_Sales~`Sub-Category`)
 ```
 One-way ANOVA with Welch test suggests that at least one of the subcategories has a significantly different sales compared to others. We will proceed with a post-hoc test to determine the significant sub-category. There are multiple post-hoc test available depending on the assumptions about the data. We know from the Levene's test that our furniture sales data have unequal variances. Next, we need to find out if the sample sizes among the sub-categories are equal.
-```{r}
+```{r count}
 #Another summary statistics of furniture sub-category
 Furniture %>%
   group_by(`Sub-Category`) %>%
@@ -136,12 +136,32 @@ Furniture %>%
 ```
 Since the sample size is also unequal, the following post-hoc tests are appropriate: Dunette's test, Games-Howell test and Tamhane test. 
 Let's use Games-Howell test.
-```{r}
+```{r Games Howell}
 
 Furniture %>% rename("SubCategory" = "Sub-Category") %>% games_howell_test(log_Sales~SubCategory)
 
 ```
-Games-Howell test shows that all pairwaise comparisons, except for Bookcases Vs Chairs, yield significant results.
+Games-Howell test shows that all pairwise comparisons, except for Bookcases Vs Chairs, yield significant results. To visualize the statistical significance on a plot, we have to save the test results to a new data frame.
+```{r, warning=FALSE}
+# Welch One way ANOVA test
+
+welch.aov <- Furniture %>% welch_anova_test(log_Sales~`Sub-Category`)
+
+# Pairwise comparisons (Games-Howell)
+pwc <- Furniture %>% rename("SubCategory" = "Sub-Category") %>% games_howell_test(log_Sales~SubCategory)
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_y_position(step.increase = 1)
+ggboxplot(Furniture %>% rename("SubCategory" = "Sub-Category") , 
+          x = "SubCategory", y = "log_Sales", fill = "SubCategory")+
+  scale_fill_brewer(palette = "Pastel2") +
+  stat_pvalue_manual(pwc, hide.ns = TRUE, label = "p.adj.signif") + 
+  labs(
+    title = "Furniture Sales are Significantly Different Among Subcategories", 
+    subtitle = get_test_label(welch.aov, detailed = TRUE),
+    caption = get_pwc_label(pwc)) + theme(legend.position = "none")
+```
+
 
 ```{r}
 devtools::session_info()
