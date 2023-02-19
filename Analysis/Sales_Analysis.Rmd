@@ -1,5 +1,5 @@
 ---
-title: "Analysis of Superstore Sales Data"
+title: "Analysis of Superstore Furniture Sales Data"
 author: "Yupawadee Galasong"
 date: "2023-02-19"
 output: html_document
@@ -13,7 +13,14 @@ library(ggpubr)
 library(rstatix)
 ```
 
-# Importing the Dataset
+# Analyses to be performed
+
+1. Summary statistics such as mean, median and standard deviation
+2. Normality and Homogeneity of Variance check
+3. One-Way ANOVA
+4. Post-hoc test
+
+# Introduction
 
 The 'Superstore' dataset contains \~ 10,000 entries of sales data. The following information is recorded: order ID, order date, ship date, ship mode, customer information (name, address, segment), product information, sales, discount and profit. To begin the analysis, we import the dataset and reformat certain columns as needed.
 
@@ -92,12 +99,17 @@ Let's create a new data frame by subsetting the initial Superstore dataset.
 ```{r subset data}
 Furniture = subset(Superstore, Category == "Furniture")
 ```
-We want to know if which product subcategory within the furniture category generated significant sales. To get a glimpse of how the subcategories stacks up against one another, we can visualize it with side-by-side boxplots. 
+
+We want to know if which product subcategory within the furniture category generated significant sales. To get a glimpse of how the subcategories stacks up against one another, we can visualize it with side-by-side boxplots.
+
 ```{r boxplot}
 ggplot(data = Furniture, aes(x = `Sub-Category`, y = log(Sales),fill = `Sub-Category`))+ geom_violin()+labs(title = "Furniture Sales by Subcategories ")+scale_fill_brewer(palette = "Pastel2")
 ```
+
 ## Checking normality assumption
-Before performing Analysis of Variance (ANOVA), we should make sure that the data meets certain assumptions, one of which is the normality assumption. Normality is generally visualized using QQplot. 
+
+Before performing Analysis of Variance (ANOVA), we should make sure that the data meets certain assumptions, one of which is the normality assumption. Normality is generally visualized using QQplot.
+
 ```{r}
 #Add a new column of log-transformed sales to the Furniture dataframe because ggqqplot cannot accept log(Sales) as input.
 Furniture$log_Sales = log(Furniture$Sales)
@@ -105,18 +117,19 @@ Furniture$log_Sales = log(Furniture$Sales)
 #QQ plot
 ggqqplot(Furniture, "log_Sales", facet.by = "Sub-Category")
 ```
-All the points fall approximately along the reference line, for each cell. So we can assume normality of the log-transformed sales data.
-##  Checking the assumption of homogeneity of variances 
-Levene's test can be used to check the homogeneity of variances; i.e. if variances are equal.
+
+All the points fall approximately along the reference line, for each cell. So we can assume normality of the log-transformed sales data. \## Checking the assumption of homogeneity of variances Levene's test can be used to check the homogeneity of variances; i.e. if variances are equal.
+
 ```{r Homogeneity of Variances, warning=FALSE}
 #Displaying results in a tibble
 Furniture %>% levene_test(log_Sales ~ `Sub-Category`)
 
 ```
-The p-value of the Levene's test is way below 0.05, which tells us that the variances are significantly different among product subcategories! 
-We should not be performing a typical ANOVA because the homogeneity of variance assumption is not met. However, we can st will compute run a specific kind of ANOVA that has Welch statistic. This test does not require the assumption of equal variances.
+
+The p-value of the Levene's test is way below 0.05, which tells us that the variances are significantly different among product subcategories! We should not be performing a typical ANOVA because the homogeneity of variance assumption is not met. However, we can st will compute run a specific kind of ANOVA that has Welch statistic. This test does not require the assumption of equal variances.
 
 ## Welch One-Way ANOVA Test
+
 ```{r}
 #Convert Sub-Category to a factor
 Furniture$`Sub-Category` <- as.factor(Furniture$`Sub-Category`)
@@ -124,7 +137,9 @@ Furniture$`Sub-Category` <- as.factor(Furniture$`Sub-Category`)
 #Run the test
 Furniture %>% welch_anova_test(log_Sales~`Sub-Category`)
 ```
+
 One-way ANOVA with Welch test suggests that at least one of the subcategories has a significantly different sales compared to others. We will proceed with a post-hoc test to determine the significant sub-category. There are multiple post-hoc test available depending on the assumptions about the data. We know from the Levene's test that our furniture sales data have unequal variances. Next, we need to find out if the sample sizes among the sub-categories are equal.
+
 ```{r count}
 #Another summary statistics of furniture sub-category
 Furniture %>%
@@ -134,14 +149,17 @@ Furniture %>%
           mean_sales = mean(Sales),
           SD_sales = sd(Sales))
 ```
-Since the sample size is also unequal, the following post-hoc tests are appropriate: Dunette's test, Games-Howell test and Tamhane test. 
-Let's use Games-Howell test.
+
+Since the sample size is also unequal, the following post-hoc tests are appropriate: Dunette's test, Games-Howell test and Tamhane test. Let's use Games-Howell test.
+
 ```{r Games Howell}
 
 Furniture %>% rename("SubCategory" = "Sub-Category") %>% games_howell_test(log_Sales~SubCategory)
 
 ```
+
 Games-Howell test shows that all pairwise comparisons, except for Bookcases Vs Chairs, yield significant results. To visualize the statistical significance on a plot, we have to save the test results to a new data frame.
+
 ```{r, warning=FALSE}
 # Welch One way ANOVA test
 
@@ -161,7 +179,6 @@ ggboxplot(Furniture %>% rename("SubCategory" = "Sub-Category") ,
     subtitle = get_test_label(welch.aov, detailed = TRUE),
     caption = get_pwc_label(pwc)) + theme(legend.position = "none")
 ```
-
 
 ```{r}
 devtools::session_info()
