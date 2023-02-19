@@ -113,13 +113,18 @@ Levene's test can be used to check the homogeneity of variances; i.e. if varianc
 Furniture %>% levene_test(log_Sales ~ `Sub-Category`)
 
 ```
-The p-value of the Levene's test is way below 0.05, which tells us that the variances are significantly different amoung product subcategories! 
+The p-value of the Levene's test is way below 0.05, which tells us that the variances are significantly different among product subcategories! 
 We should not be performing a typical ANOVA because the homogeneity of variance assumption is not met. However, we can st will compute run a specific kind of ANOVA that has Welch statistic. This test does not require the assumption of equal variances.
 
+## Welch One-Way ANOVA Test
 ```{r}
+#Convert Sub-Category to a factor
+Furniture$`Sub-Category` <- as.factor(Furniture$`Sub-Category`)
 
+#Run the test
+Furniture %>% welch_anova_test(log_Sales~`Sub-Category`)
 ```
-
+One-way ANOVA with Welch test suggests that at least one of the subcategories has a significantly different sales compared to others. We will proceed with a post-hoc test to determine the significant sub-category. There are multiple post-hoc test available depending on the assumptions about the data. We know from the Levene's test that our furniture sales data have unequal variances. Next, we need to find out if the sample sizes among the sub-categories are equal.
 ```{r}
 devtools::session_info()
 ```
