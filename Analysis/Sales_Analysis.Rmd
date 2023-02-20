@@ -10,11 +10,12 @@ nocite: '@*'
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::write_bib(c("base", "tidyverse", "ggpubr","rstatix"), "packages.bib")
+knitr::write_bib(c("base", "tidyverse", "ggpubr","rstatix","stats"), "packages.bib")
 library(tidyverse)
 library(devtools)
 library(ggpubr)
 library(rstatix)
+library(stats)
 ```
 
 # Analyses to be performed
@@ -187,7 +188,19 @@ ggboxplot(Furniture %>% rename("SubCategory" = "Sub-Category") ,
     subtitle = get_test_label(welch.aov, detailed = TRUE),
     caption = get_pwc_label(pwc)) + theme(legend.position = "none")
 ```
+Finally, let's try fitting a linear model on the furniture data.
+We will use lm() function to fit a model. We can also include interaction terms, for example, Segment*Region to see if those predictors together can significantly affects the outcome.
+```{r}
 
+lm.fit <- lm(log_Sales~`Sub-Category`+Segment + Region+ Quantity+Discount+`Ship Mode`+Segment:Region, data = Furniture)
+summary(lm.fit)
+```
+Based on the summary of the model, it seems that subcategories 'chairs','Furnishings' and 'Tables' are significant predictors of furniture sales. Quantity and Discount are significant too. This makes sense because we can expect that higher discount generally means lower sales. While Segment and Region on their own are not that significant, fitting the an interaction term of those two predictors reveals that corporate consumers on in the West is a high-spending segment. This could be a useful information in business or marketing-related decision making. 
+
+The model summary also shows that the R-squared value is 0.64, meaning that only 64% of the variances in the sales data can be explained by the list of predictors we chose for this model. 
+
+# Conclusion
+We explored the Superstore sales data with the emphasis on furniture sales data. One-way ANOVA test with Welch statistic shows that the furniture subcategories have significantly different sales. Finally, we fit a linear model with an interaction term and obtained a model with an R-squared value of 0.64.
 ```{r}
 devtools::session_info()
 ```
