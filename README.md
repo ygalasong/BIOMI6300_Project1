@@ -7,7 +7,7 @@ control.
 
 **Project description:** A sample dataset is analyzed and visualized
 using R. Code and results will be documented in RMarkdown with version
-control.
+control. A minimum of 25 commits is required for the project.
 
 **Repository structure:**
 
