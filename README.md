@@ -1,8 +1,4 @@
----
-editor_options: 
-  markdown: 
-    wrap: 72
----
+
 
 # BIOMI6300_Project1: Analysis of Furniture Sales
 
